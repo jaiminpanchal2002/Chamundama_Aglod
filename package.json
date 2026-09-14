@@ -5,8 +5,9 @@
   "description": "Official temple & trust website for Shree Chamunda Dham Aglod",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
+    "postinstall": "prisma generate",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "prisma:generate": "prisma generate",
