@@ -74,15 +74,31 @@ const localDriver: StorageDriver = {
 
 /**
  * Pick the storage driver. Cloudinary is used automatically whenever its keys
- * are configured (required on serverless hosts like Vercel where the local
- * filesystem is read-only) — unless STORAGE_DRIVER is explicitly "local".
+ * are configured — required on serverless hosts like Vercel where the local
+ * filesystem is read-only. If no Cloudinary keys are present, fall back to the
+ * local driver (development). STORAGE_DRIVER is not consulted, so a stray
+ * STORAGE_DRIVER=local can never disable working Cloudinary uploads.
  */
 function cloudinaryActive(): boolean {
-  return cloudinaryConfigured() && process.env.STORAGE_DRIVER !== "local";
+  return cloudinaryConfigured();
 }
 
 function getDriver(): StorageDriver {
   return cloudinaryActive() ? cloudinaryDriver : localDriver;
+}
+
+/** Precise reason Cloudinary isn't active (for admin-facing errors). */
+function cloudinaryMissingReason(): string {
+  const missing = [
+    ["CLOUDINARY_CLOUD_NAME", process.env.CLOUDINARY_CLOUD_NAME],
+    ["CLOUDINARY_API_KEY", process.env.CLOUDINARY_API_KEY],
+    ["CLOUDINARY_API_SECRET", process.env.CLOUDINARY_API_SECRET],
+  ]
+    .filter(([, v]) => !v)
+    .map(([k]) => k);
+  return missing.length
+    ? `Missing Cloudinary env var(s): ${missing.join(", ")}. Add them in Vercel and redeploy.`
+    : "Cloudinary keys are present but did not initialise.";
 }
 
 export const storage = getDriver();
@@ -108,10 +124,8 @@ export async function saveMedia(
     await writeFile(path.join(dir, name), buffer);
     return `/uploads/${folder}/${name}`;
   } catch {
-    // On serverless hosts the public folder is read-only.
-    throw new Error(
-      "Image storage is not configured. Set the CLOUDINARY_* environment variables (and STORAGE_DRIVER is not 'local') to enable uploads in production.",
-    );
+    // On serverless hosts the public folder is read-only — Cloudinary required.
+    throw new Error(`Image storage is not configured. ${cloudinaryMissingReason()}`);
   }
 }
 
