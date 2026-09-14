@@ -58,6 +58,34 @@ export function Hero({
   const px = useSpring(mx, { stiffness: 40, damping: 20 });
   const py = useSpring(my, { stiffness: 40, damping: 20 });
 
+  // Robust video autoplay on mobile (iOS can defer muted autoplay).
+  const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !videoUrl) return;
+    const tryPlay = () => v.play().catch(() => undefined);
+    tryPlay();
+    // Some mobile browsers only allow play after the first interaction.
+    const onFirst = () => {
+      tryPlay();
+      window.removeEventListener("touchstart", onFirst);
+      window.removeEventListener("click", onFirst);
+    };
+    window.addEventListener("touchstart", onFirst, { passive: true });
+    window.addEventListener("click", onFirst);
+    return () => {
+      window.removeEventListener("touchstart", onFirst);
+      window.removeEventListener("click", onFirst);
+    };
+  }, [videoUrl]);
+
+  // Poster shown until the video plays (or if autoplay is blocked): a still
+  // frame of the video itself, never the red placeholder art.
+  const poster =
+    videoUrl && videoUrl.includes("/video/upload/")
+      ? videoUrl.replace("/video/upload/", "/video/upload/so_3/").replace(/\.[a-z0-9]+$/i, ".jpg")
+      : slides[0]?.desktopImage;
+
   // Scroll-driven parallax — works on mobile touch scroll (spec §4, §35).
   const heroRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
@@ -104,13 +132,14 @@ export function Hero({
        <motion.div className="absolute inset-0" style={{ x: px, y: py }}>
         {videoUrl ? (
           <video
+            ref={videoRef}
             className="absolute inset-[-3%] h-[106%] w-[106%] object-cover"
             autoPlay
             muted
             loop
             playsInline
             preload="auto"
-            poster={slides[0]?.desktopImage}
+            poster={poster}
           >
             <source src={videoUrl} type="video/mp4" />
           </video>
