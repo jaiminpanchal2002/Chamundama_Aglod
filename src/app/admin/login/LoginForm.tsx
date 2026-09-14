@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 
 export function LoginForm() {
-  const router = useRouter();
   const params = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,18 +16,25 @@ export function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-    setLoading(false);
-    if (res?.error) {
-      setError("Invalid email or password.");
-      return;
+    try {
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+      if (!res || res.error) {
+        setLoading(false);
+        setError("Invalid email or password.");
+        return;
+      }
+      // Hard navigation so the freshly-set session cookie is sent with the
+      // request to /admin (a soft router.push can race the cookie write).
+      const dest = params.get("callbackUrl") || "/admin";
+      window.location.assign(dest);
+    } catch {
+      setLoading(false);
+      setError("Something went wrong. Please try again.");
     }
-    router.push(params.get("callbackUrl") || "/admin");
-    router.refresh();
   }
 
   return (
