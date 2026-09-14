@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getLocale, translate } from "@/lib/i18n";
 import { pick } from "@/lib/i18n/config";
 import { formatINR, youtubeId } from "@/lib/utils";
+import { getHeroVideo } from "@/lib/settings";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { Parallax } from "@/components/ui/Parallax";
@@ -137,11 +138,13 @@ export default async function HomePage() {
 
   const todaySchedule = normalDarshan;
   const nextEvent = events[0];
+  const heroVideo = await getHeroVideo();
 
   return (
     <>
       <Hero
         slides={heroSlides}
+        videoUrl={heroVideo.url}
         copy={{
           ...HERO_COPY_FALLBACK,
           darshan: translate(locale, "cta.darshan"),

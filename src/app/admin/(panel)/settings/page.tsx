@@ -6,6 +6,7 @@ import {
   getFestival,
   getDonationPresets,
   getDonationFields,
+  getHeroVideo,
 } from "@/lib/settings";
 import {
   PageHeader,
@@ -22,13 +23,14 @@ import {
   saveTempleInfo,
   addSocialLink,
   deleteSocialLink,
+  saveHeroVideo,
 } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsAdminPage() {
   await requireAdmin("settings.manage");
-  const [temple, socials, maintenance, whatsapp, festival, presets, fields] =
+  const [temple, socials, maintenance, whatsapp, festival, presets, fields, heroVideo] =
     await Promise.all([
       prisma.templeInfo.findFirst(),
       prisma.socialLink.findMany({ orderBy: { order: "asc" } }),
@@ -37,6 +39,7 @@ export default async function SettingsAdminPage() {
       getFestival(),
       getDonationPresets(),
       getDonationFields(),
+      getHeroVideo(),
     ]);
 
   return (
@@ -45,6 +48,20 @@ export default async function SettingsAdminPage() {
         title="Website Settings"
         description="Temple information, social links, donation configuration, festival theme and maintenance mode."
       />
+
+      <Card>
+        <h2 className="mb-1 text-lg font-semibold">Homepage hero video</h2>
+        <p className="mb-4 text-sm text-slate-500">
+          Paste a video URL (e.g. a Cloudinary .mp4) to use as the cinematic hero
+          background. Leave empty to fall back to hero slides / placeholder art.
+        </p>
+        <form action={saveHeroVideo} className="flex flex-wrap items-end gap-3">
+          <div className="flex-1">
+            <Field label="Hero video URL" name="url" defaultValue={heroVideo.url} />
+          </div>
+          <SubmitButton>Save hero video</SubmitButton>
+        </form>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

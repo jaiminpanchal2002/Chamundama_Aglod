@@ -39,7 +39,15 @@ export interface HeroCopy {
 
 const SLIDE_MS = 7000; // slow, cinematic (spec §4: 6–9s)
 
-export function Hero({ slides, copy }: { slides: HeroSlideData[]; copy: HeroCopy }) {
+export function Hero({
+  slides,
+  copy,
+  videoUrl,
+}: {
+  slides: HeroSlideData[];
+  copy: HeroCopy;
+  videoUrl?: string | null;
+}) {
   const reduce = useReducedMotion();
   const [active, setActive] = useState(0);
   const count = slides.length;
@@ -61,10 +69,10 @@ export function Hero({ slides, copy }: { slides: HeroSlideData[]; copy: HeroCopy
   const copyOpacity = useTransform(scrollYProgress, [0, 0.7], [1, reduce ? 1 : 0]);
 
   useEffect(() => {
-    if (count <= 1 || reduce) return;
+    if (count <= 1 || reduce || videoUrl) return;
     const id = setInterval(() => setActive((i) => (i + 1) % count), SLIDE_MS);
     return () => clearInterval(id);
-  }, [count, reduce]);
+  }, [count, reduce, videoUrl]);
 
   useEffect(() => {
     if (reduce) return;
@@ -91,38 +99,52 @@ export function Hero({ slides, copy }: { slides: HeroSlideData[]; copy: HeroCopy
       ref={heroRef}
       className="relative flex h-[94vh] min-h-[580px] w-full items-center justify-center overflow-hidden bg-temple-burgundy"
     >
-      {/* Cross-dissolving Ken Burns slides (scroll + mouse parallax) */}
+      {/* Background: cinematic video, or cross-dissolving Ken Burns slides */}
       <motion.div className="absolute inset-0" style={{ y: imgScrollY }}>
        <motion.div className="absolute inset-0" style={{ x: px, y: py }}>
-        <AnimatePresence>
-          <motion.div
-            key={active}
-            className="absolute inset-0"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.8, ease: "easeInOut" }}
+        {videoUrl ? (
+          <video
+            className="absolute inset-[-3%] h-[106%] w-[106%] object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            poster={slides[0]?.desktopImage}
           >
+            <source src={videoUrl} type="video/mp4" />
+          </video>
+        ) : (
+          <AnimatePresence>
             <motion.div
-              className="absolute inset-[-4%]"
-              initial={reduce ? {} : { scale: 1.05 }}
-              animate={reduce ? {} : { scale: 1.16 }}
-              transition={{ duration: (SLIDE_MS + 2000) / 1000, ease: "linear" }}
+              key={active}
+              className="absolute inset-0"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.8, ease: "easeInOut" }}
             >
-              {current && (
-                <Image
-                  src={current.desktopImage}
-                  alt=""
-                  fill
-                  priority
-                  sizes="100vw"
-                  className="object-cover"
-                  style={{ objectPosition: `${current.focalX}% ${current.focalY}%` }}
-                />
-              )}
+              <motion.div
+                className="absolute inset-[-4%]"
+                initial={reduce ? {} : { scale: 1.05 }}
+                animate={reduce ? {} : { scale: 1.16 }}
+                transition={{ duration: (SLIDE_MS + 2000) / 1000, ease: "linear" }}
+              >
+                {current && (
+                  <Image
+                    src={current.desktopImage}
+                    alt=""
+                    fill
+                    priority
+                    sizes="100vw"
+                    className="object-cover"
+                    style={{ objectPosition: `${current.focalX}% ${current.focalY}%` }}
+                  />
+                )}
+              </motion.div>
             </motion.div>
-          </motion.div>
-        </AnimatePresence>
+          </AnimatePresence>
+        )}
        </motion.div>
       </motion.div>
 
@@ -203,7 +225,7 @@ export function Hero({ slides, copy }: { slides: HeroSlideData[]; copy: HeroCopy
       </motion.div>
 
       {/* Slide dots */}
-      {count > 1 && (
+      {!videoUrl && count > 1 && (
         <div className="absolute bottom-20 left-1/2 z-10 flex -translate-x-1/2 gap-2">
           {slides.map((_, i) => (
             <button

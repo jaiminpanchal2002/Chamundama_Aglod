@@ -9,6 +9,7 @@ export const SETTING_KEYS = {
   maintenance: "site.maintenance",
   festival: "site.festival",
   specialDarshan: "site.specialDarshan",
+  heroVideo: "hero.video",
   audio: "site.audio",
   whatsapp: "site.whatsapp",
   analytics: "site.analytics",
@@ -102,6 +103,13 @@ export const getSpecialDarshan = () =>
 
 export const getAudio = () =>
   getSetting<AudioSetting>(SETTING_KEYS.audio, { enabled: false });
+
+export interface HeroVideoSetting {
+  url?: string;
+  poster?: string;
+}
+export const getHeroVideo = () =>
+  getSetting<HeroVideoSetting>(SETTING_KEYS.heroVideo, {});
 
 export const getWhatsapp = () =>
   getSetting<WhatsappSetting>(SETTING_KEYS.whatsapp, { enabled: false });

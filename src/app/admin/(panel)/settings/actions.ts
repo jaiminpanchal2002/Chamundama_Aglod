@@ -24,6 +24,17 @@ export async function saveMaintenance(formData: FormData) {
   revalidatePath("/admin/settings");
 }
 
+export async function saveHeroVideo(formData: FormData) {
+  await assertPermission("settings.manage");
+  await setSetting(
+    SETTING_KEYS.heroVideo,
+    { url: str(formData, "url") || undefined },
+    "homepage",
+  );
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+}
+
 export async function saveWhatsapp(formData: FormData) {
   await assertPermission("settings.manage");
   await setSetting(SETTING_KEYS.whatsapp, {
