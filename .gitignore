@@ -40,3 +40,6 @@ yarn-error.log*
 .vscode/*
 !.vscode/extensions.json
 .idea
+
+# Installed agent skills (local tooling, not app code)
+.agents/

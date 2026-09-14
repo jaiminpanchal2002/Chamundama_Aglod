@@ -296,8 +296,11 @@ export default async function HomePage() {
                 ? pick(temple, "about", locale)
                 : translate(locale, "placeholder.trust")}
             </p>
-            <Link href="/about" className="btn-outline mt-6">
-              {translate(locale, "cta.readMore")} <ArrowRight className="h-4 w-4" />
+            <Link href="/about" className="btn-outline group mt-6">
+              {translate(locale, "cta.readMore")}
+              <span className="btn-icon">
+                <ArrowRight className="h-4 w-4" />
+              </span>
             </Link>
           </Reveal>
         </div>
@@ -399,8 +402,11 @@ export default async function HomePage() {
           </p>
         )}
         <div className="mt-8 text-center">
-          <Link href="/events" className="btn-outline">
-            {translate(locale, "cta.viewAll")} <ArrowRight className="h-4 w-4" />
+          <Link href="/events" className="btn-outline group">
+            {translate(locale, "cta.viewAll")}
+            <span className="btn-icon">
+              <ArrowRight className="h-4 w-4" />
+            </span>
           </Link>
         </div>
       </Section>
@@ -472,8 +478,11 @@ export default async function HomePage() {
             ))}
           </div>
           <div className="mt-8 text-center">
-            <Link href="/gallery" className="btn-outline">
-              {translate(locale, "cta.viewAll")} <ArrowRight className="h-4 w-4" />
+            <Link href="/gallery" className="btn-outline group">
+              {translate(locale, "cta.viewAll")}
+            <span className="btn-icon">
+              <ArrowRight className="h-4 w-4" />
+            </span>
             </Link>
           </div>
         </Section>

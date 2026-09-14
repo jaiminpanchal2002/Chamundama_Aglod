@@ -125,7 +125,7 @@ export function Hero({
   return (
     <section
       ref={heroRef}
-      className="relative flex h-[94vh] min-h-[580px] w-full items-center justify-center overflow-hidden bg-temple-burgundy"
+      className="relative flex h-[92svh] min-h-[560px] w-full items-center justify-center overflow-hidden bg-temple-burgundy"
     >
       {/* Background: cinematic video, or cross-dissolving Ken Burns slides */}
       <motion.div className="absolute inset-0" style={{ y: imgScrollY }}>

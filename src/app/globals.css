@@ -60,31 +60,47 @@
     );
   }
 
-  /* Section heading eyebrow with lotus/sacred feel. */
+  /* Eyebrow: pill-shaped micro-badge preceding headings. */
   .eyebrow {
-    @apply inline-flex items-center gap-2 text-sm font-medium uppercase tracking-[0.2em] text-temple-red;
+    @apply inline-flex items-center gap-2 rounded-full border border-temple-gold/40 bg-temple-gold/[0.06] px-3 py-1 text-xs font-medium uppercase tracking-[0.22em] text-temple-red;
   }
 
+  /* Pill CTAs with fluid spring-like easing. */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-temple bg-temple-red px-6 py-3 font-medium text-temple-cream shadow-gold transition-all duration-200 hover:bg-temple-sindoor hover:shadow-gold-glow focus-visible:ring-2 active:scale-95;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-temple-red px-6 py-3 font-medium text-temple-cream shadow-gold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-temple-sindoor hover:shadow-gold-glow focus-visible:ring-2 active:scale-[0.97];
   }
 
   .btn-gold {
-    @apply inline-flex items-center justify-center gap-2 rounded-temple bg-gradient-to-b from-temple-gold to-temple-saffron px-6 py-3 font-semibold text-temple-burgundy shadow-gold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-gold-glow hover:brightness-105 active:scale-95;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-b from-temple-gold to-temple-saffron px-6 py-3 font-semibold text-temple-burgundy shadow-gold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:shadow-gold-glow hover:brightness-[1.04] active:scale-[0.97];
   }
 
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-temple border border-temple-gold/60 bg-transparent px-6 py-3 font-medium text-temple-maroon transition-all duration-200 hover:bg-temple-gold/10 active:scale-95;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-temple-gold/60 bg-transparent px-6 py-3 font-medium text-temple-maroon transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-temple-gold/10 active:scale-[0.97];
   }
 
+  /* Nested trailing-icon circle for CTAs (button-in-button). */
+  .btn-icon {
+    @apply inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/10 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5;
+  }
+
+  /* Premium card: soft diffused ambient shadow + top highlight, big squircle. */
   .card-temple {
-    @apply rounded-temple border border-temple-gold/25 bg-card p-6 shadow-sm transition-all duration-300 will-change-transform;
+    @apply rounded-[1.35rem] border border-temple-gold/20 bg-card p-6 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] will-change-transform;
+    box-shadow:
+      inset 0 1px 0 hsl(0 0% 100% / 0.6),
+      0 1px 2px hsl(var(--temple-maroon) / 0.04),
+      0 20px 44px -26px hsl(var(--temple-maroon) / 0.3);
   }
   .card-temple:hover {
-    @apply -translate-y-1 border-temple-gold/50 shadow-gold;
+    @apply -translate-y-1.5 border-temple-gold/45;
+    box-shadow:
+      inset 0 1px 0 hsl(0 0% 100% / 0.7),
+      0 1px 2px hsl(var(--temple-maroon) / 0.05),
+      0 34px 66px -28px hsl(var(--temple-maroon) / 0.42),
+      0 0 0 1px hsl(var(--temple-gold) / 0.3);
   }
   .card-temple:active {
-    @apply scale-[0.985];
+    @apply scale-[0.99];
   }
 
   .container-temple {
