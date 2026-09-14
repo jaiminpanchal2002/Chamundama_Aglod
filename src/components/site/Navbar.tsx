@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, Heart } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import type { Locale } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";
@@ -95,31 +96,50 @@ export function Navbar({
       </nav>
 
       {/* Mobile drawer */}
-      {open && (
-        <div className="border-t border-temple-gold/25 bg-temple-maroon lg:hidden">
-          <ul className="container-temple flex flex-col py-4">
-            {items.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="block py-3 text-temple-cream/90 hover:text-temple-gold"
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="drawer"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden border-t border-temple-gold/25 bg-temple-maroon lg:hidden"
+          >
+            <ul className="container-temple flex flex-col py-4">
+              {items.map((item, i) => (
+                <motion.li
+                  key={item.href}
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.06 + i * 0.05, duration: 0.3 }}
                 >
-                  {item.label}
+                  <Link
+                    href={item.href}
+                    className="block py-3 text-temple-cream/90 transition active:translate-x-1 active:text-temple-gold"
+                  >
+                    {item.label}
+                  </Link>
+                </motion.li>
+              ))}
+              <motion.li
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.06 + items.length * 0.05 }}
+                className="mt-3 flex items-center justify-between"
+              >
+                <LanguageSwitcher
+                  current={locale}
+                  className="text-temple-cream/90"
+                />
+                <Link href="/donate" className="btn-gold px-4 py-2 text-sm">
+                  <Heart className="h-4 w-4" /> {donateLabel}
                 </Link>
-              </li>
-            ))}
-            <li className="mt-3 flex items-center justify-between">
-              <LanguageSwitcher
-                current={locale}
-                className="text-temple-cream/90"
-              />
-              <Link href="/donate" className="btn-gold px-4 py-2 text-sm">
-                <Heart className="h-4 w-4" /> {donateLabel}
-              </Link>
-            </li>
-          </ul>
-        </div>
-      )}
+              </motion.li>
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

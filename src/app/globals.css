@@ -66,15 +66,15 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-temple bg-temple-red px-6 py-3 font-medium text-temple-cream shadow-gold transition hover:bg-temple-sindoor hover:shadow-gold-glow focus-visible:ring-2;
+    @apply inline-flex items-center justify-center gap-2 rounded-temple bg-temple-red px-6 py-3 font-medium text-temple-cream shadow-gold transition-all duration-200 hover:bg-temple-sindoor hover:shadow-gold-glow focus-visible:ring-2 active:scale-95;
   }
 
   .btn-gold {
-    @apply inline-flex items-center justify-center gap-2 rounded-temple bg-gradient-to-b from-temple-gold to-temple-saffron px-6 py-3 font-semibold text-temple-burgundy shadow-gold transition hover:-translate-y-0.5 hover:shadow-gold-glow hover:brightness-105;
+    @apply inline-flex items-center justify-center gap-2 rounded-temple bg-gradient-to-b from-temple-gold to-temple-saffron px-6 py-3 font-semibold text-temple-burgundy shadow-gold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-gold-glow hover:brightness-105 active:scale-95;
   }
 
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-temple border border-temple-gold/60 bg-transparent px-6 py-3 font-medium text-temple-maroon transition hover:bg-temple-gold/10;
+    @apply inline-flex items-center justify-center gap-2 rounded-temple border border-temple-gold/60 bg-transparent px-6 py-3 font-medium text-temple-maroon transition-all duration-200 hover:bg-temple-gold/10 active:scale-95;
   }
 
   .card-temple {
@@ -82,6 +82,9 @@
   }
   .card-temple:hover {
     @apply -translate-y-1 border-temple-gold/50 shadow-gold;
+  }
+  .card-temple:active {
+    @apply scale-[0.985];
   }
 
   .container-temple {

@@ -72,13 +72,17 @@ const localDriver: StorageDriver = {
   },
 };
 
-// STORAGE_DRIVER selects the active driver. Cloudinary is used in production
-// (Vercel filesystem is not persistent); local is the zero-config default.
+/**
+ * Pick the storage driver. Cloudinary is used automatically whenever its keys
+ * are configured (required on serverless hosts like Vercel where the local
+ * filesystem is read-only) — unless STORAGE_DRIVER is explicitly "local".
+ */
+function cloudinaryActive(): boolean {
+  return cloudinaryConfigured() && process.env.STORAGE_DRIVER !== "local";
+}
+
 function getDriver(): StorageDriver {
-  if (process.env.STORAGE_DRIVER === "cloudinary" && cloudinaryConfigured()) {
-    return cloudinaryDriver;
-  }
-  return localDriver;
+  return cloudinaryActive() ? cloudinaryDriver : localDriver;
 }
 
 export const storage = getDriver();
@@ -93,14 +97,22 @@ export async function saveMedia(
   folder: string,
   ext: string,
 ): Promise<string> {
-  if (process.env.STORAGE_DRIVER === "cloudinary" && cloudinaryConfigured()) {
+  if (cloudinaryActive()) {
     return uploadPublicMedia(buffer, folder);
   }
-  const dir = path.join(process.cwd(), "public", "uploads", folder);
-  await mkdir(dir, { recursive: true });
-  const name = `${randomBytes(12).toString("hex")}.${ext.replace(/[^a-z0-9]/gi, "")}`;
-  await writeFile(path.join(dir, name), buffer);
-  return `/uploads/${folder}/${name}`;
+  // Local fallback — only works where the filesystem is writable (dev).
+  try {
+    const dir = path.join(process.cwd(), "public", "uploads", folder);
+    await mkdir(dir, { recursive: true });
+    const name = `${randomBytes(12).toString("hex")}.${ext.replace(/[^a-z0-9]/gi, "")}`;
+    await writeFile(path.join(dir, name), buffer);
+    return `/uploads/${folder}/${name}`;
+  } catch {
+    // On serverless hosts the public folder is read-only.
+    throw new Error(
+      "Image storage is not configured. Set the CLOUDINARY_* environment variables (and STORAGE_DRIVER is not 'local') to enable uploads in production.",
+    );
+  }
 }
 
 // --------------------------------------------------------------------------

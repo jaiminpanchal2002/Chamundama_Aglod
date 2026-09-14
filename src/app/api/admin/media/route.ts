@@ -41,19 +41,33 @@ export async function POST(request: Request) {
   }
 
   const folder = (form?.get("folder") as string) || "general";
-  const url = await saveMedia(buffer, folder, PUBLIC_TYPES[mime]!);
 
-  await prisma.mediaAsset
-    .create({
-      data: {
-        url,
-        kind: "image",
-        folder,
-        bytes: buffer.length,
-        createdBy: session.user.id,
+  try {
+    const url = await saveMedia(buffer, folder, PUBLIC_TYPES[mime]!);
+
+    await prisma.mediaAsset
+      .create({
+        data: {
+          url,
+          kind: "image",
+          folder,
+          bytes: buffer.length,
+          createdBy: session.user.id,
+        },
+      })
+      .catch(() => undefined);
+
+    return NextResponse.json({ url });
+  } catch (error) {
+    console.error("Media upload failed:", error);
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Upload failed. Please try again.",
       },
-    })
-    .catch(() => undefined);
-
-  return NextResponse.json({ url });
+      { status: 500 },
+    );
+  }
 }

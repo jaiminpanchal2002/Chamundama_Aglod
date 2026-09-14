@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -8,6 +8,8 @@ import {
   motion,
   useMotionValue,
   useSpring,
+  useScroll,
+  useTransform,
   useReducedMotion,
 } from "framer-motion";
 import { ChevronDown, Heart, Eye, CalendarDays } from "lucide-react";
@@ -48,6 +50,16 @@ export function Hero({ slides, copy }: { slides: HeroSlideData[]; copy: HeroCopy
   const px = useSpring(mx, { stiffness: 40, damping: 20 });
   const py = useSpring(my, { stiffness: 40, damping: 20 });
 
+  // Scroll-driven parallax — works on mobile touch scroll (spec §4, §35).
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const imgScrollY = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : 130]);
+  const copyScrollY = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : -80]);
+  const copyOpacity = useTransform(scrollYProgress, [0, 0.7], [1, reduce ? 1 : 0]);
+
   useEffect(() => {
     if (count <= 1 || reduce) return;
     const id = setInterval(() => setActive((i) => (i + 1) % count), SLIDE_MS);
@@ -75,9 +87,13 @@ export function Hero({ slides, copy }: { slides: HeroSlideData[]; copy: HeroCopy
         : "items-center text-center";
 
   return (
-    <section className="relative flex h-[94vh] min-h-[580px] w-full items-center justify-center overflow-hidden bg-temple-burgundy">
-      {/* Cross-dissolving Ken Burns slides */}
-      <motion.div className="absolute inset-0" style={{ x: px, y: py }}>
+    <section
+      ref={heroRef}
+      className="relative flex h-[94vh] min-h-[580px] w-full items-center justify-center overflow-hidden bg-temple-burgundy"
+    >
+      {/* Cross-dissolving Ken Burns slides (scroll + mouse parallax) */}
+      <motion.div className="absolute inset-0" style={{ y: imgScrollY }}>
+       <motion.div className="absolute inset-0" style={{ x: px, y: py }}>
         <AnimatePresence>
           <motion.div
             key={active}
@@ -107,6 +123,7 @@ export function Hero({ slides, copy }: { slides: HeroSlideData[]; copy: HeroCopy
             </motion.div>
           </motion.div>
         </AnimatePresence>
+       </motion.div>
       </motion.div>
 
       {/* Cinematic overlays: top scrim, vignette, bottom fade to burgundy */}
@@ -129,7 +146,10 @@ export function Hero({ slides, copy }: { slides: HeroSlideData[]; copy: HeroCopy
       <GoldCorners />
 
       {/* Copy */}
-      <div className={`container-temple relative z-10 flex flex-col gap-5 ${align}`}>
+      <motion.div
+        style={{ y: copyScrollY, opacity: copyOpacity }}
+        className={`container-temple relative z-10 flex flex-col gap-5 ${align}`}
+      >
         <motion.p
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -180,7 +200,7 @@ export function Hero({ slides, copy }: { slides: HeroSlideData[]; copy: HeroCopy
             <CalendarDays className="h-5 w-5" /> {copy.events}
           </Link>
         </motion.div>
-      </div>
+      </motion.div>
 
       {/* Slide dots */}
       {count > 1 && (

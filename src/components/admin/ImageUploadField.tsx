@@ -30,8 +30,15 @@ export function ImageUploadField({
       fd.set("file", file);
       fd.set("folder", folder);
       const res = await fetch("/api/admin/media", { method: "POST", body: fd });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Upload failed");
+      const text = await res.text();
+      let json: { url?: string; error?: string } = {};
+      try {
+        json = text ? JSON.parse(text) : {};
+      } catch {
+        /* non-JSON response */
+      }
+      if (!res.ok) throw new Error(json.error || `Upload failed (${res.status})`);
+      if (!json.url) throw new Error("Upload failed: no URL returned.");
       setUrl(json.url);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");
