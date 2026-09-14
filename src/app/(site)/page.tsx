@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
 import Link from "next/link";
 import Image from "next/image";
 import { Clock, Sun, Moon, MapPin, ArrowRight, Bell } from "lucide-react";
@@ -11,6 +13,22 @@ import { Parallax } from "@/components/ui/Parallax";
 import { Hero, type HeroSlideData } from "@/components/site/Hero";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Hero fallback images used when no hero slides exist in the CMS yet.
+ * Drop your real photos into /public/hero as maa-1.jpg, maa-2.jpg, maa-3.jpg
+ * (jpg/png/webp all work) and they are used automatically — otherwise the
+ * decorative SVG placeholders are shown.
+ */
+function heroFallbackImages(): string[] {
+  const exts = ["jpg", "jpeg", "png", "webp"];
+  return [1, 2, 3].map((i) => {
+    const found = exts
+      .map((e) => `maa-${i}.${e}`)
+      .find((f) => existsSync(path.join(process.cwd(), "public", "hero", f)));
+    return found ? `/hero/${found}` : `/hero/hero-${i}.svg`;
+  });
+}
 
 const HERO_COPY_FALLBACK = {
   invocation: "|| જય મા ચામુંડા ||",
@@ -98,19 +116,17 @@ export default async function HomePage() {
     focalY: s.focalY,
   }));
 
-  // Fallback hero uses bundled placeholders (replaceable via admin).
+  // Fallback hero uses real photos in /public/hero if present, else placeholders.
   if (heroSlides.length === 0) {
     heroSlides.push(
-      ...["/hero/hero-1.svg", "/hero/hero-2.svg", "/hero/hero-3.svg"].map(
-        (img) => ({
-          desktopImage: img,
-          mobileImage: img,
-          alignment: "center",
-          overlay: 40,
-          focalX: 50,
-          focalY: 40,
-        }),
-      ),
+      ...heroFallbackImages().map((img) => ({
+        desktopImage: img,
+        mobileImage: img,
+        alignment: "center",
+        overlay: 45,
+        focalX: 50,
+        focalY: 40,
+      })),
     );
   }
 
