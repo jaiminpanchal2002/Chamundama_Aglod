@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="Shree Chamunda Dham Aglod">
+  <defs>
+    <radialGradient id="g2" cx="42%" cy="40%" r="80%">
+      <stop offset="0%" stop-color="#9a1a2b"/>
+      <stop offset="55%" stop-color="#6a1120"/>
+      <stop offset="100%" stop-color="#3a0a13"/>
+    </radialGradient>
+    <linearGradient id="gold2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f3d27a"/>
+      <stop offset="100%" stop-color="#c99a3a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#g2)"/>
+  <g opacity="0.22" stroke="url(#gold2)" stroke-width="2" fill="none" transform="translate(700,380)">
+    <circle r="260"/><circle r="210"/><circle r="160"/>
+  </g>
+  <!-- temple arch silhouette -->
+  <g transform="translate(800,470)" fill="url(#gold2)" opacity="0.85">
+    <path d="M-160,300 L-160,-40 Q0,-220 160,-40 L160,300 Z" fill="#4a0d18" stroke="url(#gold2)" stroke-width="3"/>
+    <path d="M0,-210 L18,-150 L-18,-150 Z"/>
+    <rect x="-6" y="-240" width="12" height="40"/>
+  </g>
+  <!-- lamps -->
+  <g fill="url(#gold2)" opacity="0.9">
+    <circle cx="520" cy="470" r="10"/><circle cx="1080" cy="470" r="10"/>
+    <circle cx="520" cy="470" r="20" fill="none" stroke="url(#gold2)"/>
+    <circle cx="1080" cy="470" r="20" fill="none" stroke="url(#gold2)"/>
+  </g>
+  <text x="800" y="760" text-anchor="middle" font-family="'Noto Sans Gujarati',sans-serif" font-size="60" fill="#f6ead0" font-weight="700">|| જય મા ચામુંડા ||</text>
+</svg>

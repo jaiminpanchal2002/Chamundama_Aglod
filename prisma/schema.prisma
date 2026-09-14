@@ -1,0 +1,760 @@
+// ===========================================================================
+// Shree Chamunda Dham Aglod — Prisma schema (PostgreSQL)
+// Reference: master spec §42 (models) and §43 (donation data design).
+// Security-sensitive entities use UUID ids; donations/receipts also carry
+// human-friendly public reference numbers.
+// ===========================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum AdminRole {
+  SUPER_ADMIN
+  TRUSTEE_ADMIN
+  CONTENT_MANAGER
+  EVENT_MANAGER
+  DONATION_MANAGER
+  VIEWER
+}
+
+enum DonationStatus {
+  DRAFT
+  SUBMITTED
+  PENDING_VERIFICATION
+  VERIFIED
+  APPROVED
+  REJECTED
+  CLARIFICATION_REQUIRED
+  REFUNDED
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  COMPLETED
+  CANCELLED
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum GalleryItemType {
+  IMAGE
+  YOUTUBE
+  FACEBOOK
+  VIDEO
+}
+
+enum ContactStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+  SPAM
+}
+
+enum VolunteerStatus {
+  NEW
+  CONTACTED
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum AnnouncementDisplay {
+  TICKER
+  BANNER
+  POPUP
+  CARD
+}
+
+enum DarshanDayType {
+  NORMAL
+  WEEKEND
+  FESTIVAL
+}
+
+enum LiveStatus {
+  LIVE
+  OFFLINE
+  UPCOMING
+}
+
+enum NavGroup {
+  HEADER
+  FOOTER
+}
+
+// ---------------------------------------------------------------------------
+// Auth & RBAC (§32) — credentials auth with JWT sessions, no adapter tables.
+// ---------------------------------------------------------------------------
+
+model AdminUser {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         AdminRole @default(VIEWER)
+  isActive     Boolean   @default(true)
+  mfaSecret    String? // reserved for future TOTP (§46)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  auditLogs        AuditLog[]
+  verifiedDonations Donation[] @relation("VerifiedBy")
+  approvedDonations Donation[] @relation("ApprovedBy")
+  statusChanges    DonationStatusHistory[]
+
+  @@index([role])
+}
+
+// ---------------------------------------------------------------------------
+// Site configuration (§34, §27, §39)
+// ---------------------------------------------------------------------------
+
+// Generic key/value store for singleton settings: SEO defaults, analytics,
+// maintenance mode, festival mode, whatsapp config, audio, etc.
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  group     String   @default("general")
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model SocialLink {
+  id        String   @id @default(cuid())
+  platform  String // instagram | facebook | youtube | whatsapp | x
+  url       String
+  label     String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model NavigationItem {
+  id       String          @id @default(cuid())
+  labelGu  String
+  labelHi  String?
+  labelEn  String?
+  href     String
+  group    NavGroup        @default(HEADER)
+  order    Int             @default(0)
+  isActive Boolean         @default(true)
+  parentId String?
+  parent   NavigationItem? @relation("NavChildren", fields: [parentId], references: [id], onDelete: SetNull)
+  children NavigationItem[] @relation("NavChildren")
+}
+
+model HomepageSection {
+  id        String   @id @default(cuid())
+  key       String   @unique // hero | today | about | live | events | donation | gallery | trust | news | visit | social
+  titleGu   String?
+  titleHi   String?
+  titleEn   String?
+  isEnabled Boolean  @default(true)
+  order     Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model HeroSlide {
+  id            String   @id @default(cuid())
+  desktopImage  String
+  mobileImage   String?
+  titleGu       String?
+  titleHi       String?
+  titleEn       String?
+  subtitleGu    String?
+  subtitleHi    String?
+  subtitleEn    String?
+  ctaLabelGu    String?
+  ctaLabelEn    String?
+  ctaHref       String?
+  alignment     String   @default("center") // left | center | right
+  overlay       Int      @default(45) // overlay strength 0-100
+  focalX        Int      @default(50) // objectPositionX % (§66)
+  focalY        Int      @default(50) // objectPositionY %
+  order         Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([isActive, order])
+}
+
+// ---------------------------------------------------------------------------
+// Temple information & schedules (§7, §8)
+// ---------------------------------------------------------------------------
+
+model TempleInfo {
+  id           String   @id @default(cuid())
+  nameGu       String   @default("શ્રી ચામુંડા ધામ આગલોડ")
+  nameHi       String?
+  nameEn       String?  @default("Shree Chamunda Dham Aglod")
+  taglineGu    String?
+  taglineHi    String?
+  taglineEn    String?
+  aboutGu      String?  @db.Text
+  aboutHi      String?  @db.Text
+  aboutEn      String?  @db.Text
+  historyGu    String?  @db.Text
+  historyHi    String?  @db.Text
+  historyEn    String?  @db.Text
+  addressGu    String?
+  addressEn    String?
+  phone        String?
+  whatsapp     String?
+  email        String?
+  latitude     Float?
+  longitude    Float?
+  mapsUrl      String?
+  updatedAt    DateTime @updatedAt
+}
+
+model DarshanSchedule {
+  id           String         @id @default(cuid())
+  dayType      DarshanDayType @default(NORMAL)
+  labelGu      String
+  labelHi      String?
+  labelEn      String?
+  openTime     String? // e.g. "05:30"
+  closeTime    String?
+  morningAarti String?
+  eveningAarti String?
+  specialAarti String?
+  bhogTime     String?
+  note         String?
+  order        Int            @default(0)
+  isActive     Boolean        @default(true)
+}
+
+// Date-specific overrides (e.g. Navratri special timings) — §8
+model DarshanOverride {
+  id           String   @id @default(cuid())
+  date         DateTime @db.Date
+  labelGu      String
+  labelEn      String?
+  openTime     String?
+  closeTime    String?
+  morningAarti String?
+  eveningAarti String?
+  specialAarti String?
+  note         String?
+  isClosed     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@unique([date])
+}
+
+// ---------------------------------------------------------------------------
+// Trust (§21)
+// ---------------------------------------------------------------------------
+
+model Trust {
+  id               String   @id @default(cuid())
+  legalName        String?
+  registrationNo   String?
+  registrationDate DateTime?
+  logo             String?
+  storyGu          String?  @db.Text
+  storyEn          String?  @db.Text
+  missionGu        String?  @db.Text
+  missionEn        String?  @db.Text
+  visionGu         String?  @db.Text
+  visionEn         String?  @db.Text
+  objectivesGu     String?  @db.Text
+  objectivesEn     String?  @db.Text
+  phone            String?
+  email            String?
+  updatedAt        DateTime @updatedAt
+}
+
+model Trustee {
+  id          String   @id @default(cuid())
+  name        String
+  positionGu  String?
+  positionEn  String?
+  photo       String?
+  bioGu       String?  @db.Text
+  bioEn       String?  @db.Text
+  order       Int      @default(0)
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([isPublic, order])
+}
+
+// ---------------------------------------------------------------------------
+// Announcements (§11)
+// ---------------------------------------------------------------------------
+
+model Announcement {
+  id          String              @id @default(cuid())
+  titleGu     String
+  titleHi     String?
+  titleEn     String?
+  bodyGu      String?             @db.Text
+  bodyHi      String?             @db.Text
+  bodyEn      String?             @db.Text
+  display     AnnouncementDisplay @default(TICKER)
+  priority    Int                 @default(0)
+  ctaLabel    String?
+  ctaHref     String?
+  startDate   DateTime?
+  expiryDate  DateTime?
+  isActive    Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([isActive, display])
+}
+
+// ---------------------------------------------------------------------------
+// Static pages (§7) — rich content per locale
+// ---------------------------------------------------------------------------
+
+model Page {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  titleGu     String
+  titleHi     String?
+  titleEn     String?
+  bodyGu      String?  @db.Text
+  bodyHi      String?  @db.Text
+  bodyEn      String?  @db.Text
+  isPublished Boolean  @default(false)
+  seoTitle    String?
+  seoDesc     String?
+  ogImage     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Events (§9)
+// ---------------------------------------------------------------------------
+
+model Event {
+  id                String       @id @default(cuid())
+  slug              String       @unique
+  titleGu           String
+  titleHi           String?
+  titleEn           String?
+  shortGu           String?
+  shortHi           String?
+  shortEn           String?
+  bodyGu            String?      @db.Text
+  bodyHi            String?      @db.Text
+  bodyEn            String?      @db.Text
+  eventType         String? // Navratri | Poonam | Yagna | Havan | MahaAarti | ...
+  startAt           DateTime
+  endAt             DateTime?
+  allDay            Boolean      @default(false)
+  coverImage        String?
+  location          String?
+  mapsUrl           String?
+  featured          Boolean      @default(false)
+  registrationNeeded Boolean     @default(false)
+  contactPhone      String?
+  whatsapp          String?
+  status            EventStatus  @default(DRAFT)
+  seoTitle          String?
+  seoDesc           String?
+  ogImage           String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  images EventImage[]
+  galleryItems GalleryItem[]
+
+  @@index([status, startAt])
+  @@index([featured])
+}
+
+model EventImage {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  url       String
+  caption   String?
+  alt       String?
+  order     Int      @default(0)
+}
+
+// ---------------------------------------------------------------------------
+// Gallery (§12)
+// ---------------------------------------------------------------------------
+
+model GalleryCategory {
+  id        String        @id @default(cuid())
+  slug      String        @unique
+  nameGu    String
+  nameHi    String?
+  nameEn    String?
+  order     Int           @default(0)
+  isActive  Boolean       @default(true)
+  items     GalleryItem[]
+}
+
+model GalleryItem {
+  id          String          @id @default(cuid())
+  categoryId  String?
+  category    GalleryCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  type        GalleryItemType @default(IMAGE)
+  url         String // image url or video url (youtube/facebook/uploaded)
+  thumbnail   String?
+  captionGu   String?
+  captionHi   String?
+  captionEn   String?
+  alt         String?
+  order       Int             @default(0)
+  featured    Boolean         @default(false)
+  isPublished Boolean         @default(true)
+  eventId     String?
+  event       Event?          @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  createdAt   DateTime        @default(now())
+
+  @@index([isPublished, order])
+  @@index([categoryId])
+}
+
+// ---------------------------------------------------------------------------
+// Live darshan (§13)
+// ---------------------------------------------------------------------------
+
+model LiveDarshanSetting {
+  id            String     @id @default(cuid())
+  status        LiveStatus @default(OFFLINE)
+  youtubeUrl    String?
+  facebookUrl   String?
+  embedUrl      String?
+  fallbackVideo String?
+  messageGu     String?
+  messageEn     String?
+  updatedAt     DateTime   @updatedAt
+}
+
+model Video {
+  id        String   @id @default(cuid())
+  titleGu   String
+  titleHi   String?
+  titleEn   String?
+  provider  String   @default("youtube") // youtube | facebook | custom
+  url       String
+  thumbnail String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// News / Blog (§28)
+// ---------------------------------------------------------------------------
+
+model Article {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  titleGu     String
+  titleHi     String?
+  titleEn     String?
+  excerptGu   String?
+  excerptHi   String?
+  excerptEn   String?
+  bodyGu      String?       @db.Text
+  bodyHi      String?       @db.Text
+  bodyEn      String?       @db.Text
+  coverImage  String?
+  category    String? // TempleNews | Events | Announcements | Religious | Trust
+  author      String?
+  tags        String[]      @default([])
+  status      ArticleStatus @default(DRAFT)
+  publishedAt DateTime?
+  seoTitle    String?
+  seoDesc     String?
+  ogImage     String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, publishedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Donations (§14–18, §43)
+// ---------------------------------------------------------------------------
+
+model DonationCampaign {
+  id           String     @id @default(cuid())
+  slug         String     @unique
+  nameGu       String
+  nameHi       String?
+  nameEn       String?
+  descGu       String?    @db.Text
+  descHi       String?    @db.Text
+  descEn       String?    @db.Text
+  image        String?
+  targetAmount Decimal?   @db.Decimal(12, 2)
+  showRaised   Boolean    @default(false)
+  startDate    DateTime?
+  endDate      DateTime?
+  isActive     Boolean    @default(true)
+  order        Int        @default(0)
+  qrCodeId     String?
+  qrCode       QrCode?    @relation(fields: [qrCodeId], references: [id], onDelete: SetNull)
+  donations    Donation[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([isActive, order])
+}
+
+model QrCode {
+  id           String             @id @default(cuid())
+  name         String
+  image        String // public URL of the QR image (this is deliberately public donation instruction)
+  upiId        String?
+  accountLabel String?
+  isActive     Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  campaigns    DonationCampaign[]
+}
+
+model Donor {
+  id        String     @id @default(uuid())
+  name      String
+  mobile    String
+  email     String?
+  address   String?
+  city      String?
+  state     String?
+  country   String?    @default("India")
+  pan       String?
+  anonymous Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  donations Donation[]
+
+  @@index([mobile])
+}
+
+model Donation {
+  id                    String         @id @default(uuid())
+  publicReferenceNumber String         @unique // e.g. CDA-2026-000123
+  campaignId            String?
+  campaign              DonationCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  donorId               String
+  donor                 Donor          @relation(fields: [donorId], references: [id], onDelete: Cascade)
+
+  amount        Decimal @db.Decimal(12, 2)
+  currency      String  @default("INR")
+  purpose       String?
+
+  paymentMethod        String? // UPI | IMPS | NEFT | Cash | Other
+  transactionReference String?
+  paymentDate          DateTime?
+
+  status DonationStatus @default(SUBMITTED)
+
+  submittedAt DateTime  @default(now())
+  verifiedAt  DateTime?
+  approvedAt  DateTime?
+  rejectedAt  DateTime?
+
+  verifiedById String?
+  verifiedBy   AdminUser? @relation("VerifiedBy", fields: [verifiedById], references: [id], onDelete: SetNull)
+  approvedById String?
+  approvedBy   AdminUser? @relation("ApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  internalNotes       String? @db.Text
+  rejectionReason     String? // public-safe reason shown to donor
+  ipAddress           String?
+  userAgent           String?
+
+  proofs        DonationProof[]
+  statusHistory DonationStatusHistory[]
+  receipt       DonationReceipt?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, submittedAt])
+  @@index([campaignId])
+}
+
+model DonationProof {
+  id                String   @id @default(uuid())
+  donationId        String
+  donation          Donation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+  privateStorageKey String // key into the PRIVATE store — never a public URL (§17)
+  originalName      String?
+  mimeType          String
+  size              Int
+  sha256            String?
+  uploadedAt        DateTime @default(now())
+}
+
+model DonationStatusHistory {
+  id             String         @id @default(uuid())
+  donationId     String
+  donation       Donation       @relation(fields: [donationId], references: [id], onDelete: Cascade)
+  previousStatus DonationStatus?
+  newStatus      DonationStatus
+  changedById    String?
+  changedBy      AdminUser?     @relation(fields: [changedById], references: [id], onDelete: SetNull)
+  reason         String?
+  createdAt      DateTime       @default(now())
+
+  @@index([donationId])
+}
+
+model DonationReceipt {
+  id                String   @id @default(uuid())
+  donationId        String   @unique
+  donation          Donation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+  receiptNumber     String   @unique // e.g. CDA-RCPT-2026-000045
+  verificationToken String   @unique // used by public /verify-receipt/[token]
+  pdfKey            String? // key into private/public store for generated PDF
+  issuedAt          DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Seva / Volunteers / Contact (§23, §24, §50)
+// ---------------------------------------------------------------------------
+
+model Seva {
+  id               String   @id @default(cuid())
+  titleGu          String
+  titleHi          String?
+  titleEn          String?
+  descGu           String?  @db.Text
+  descEn           String?  @db.Text
+  image            String?
+  suggestedAmount  Decimal? @db.Decimal(12, 2)
+  availability     String?
+  dateSpecific     Boolean  @default(false)
+  maxParticipants  Int?
+  contact          String?
+  isActive         Boolean  @default(true)
+  order            Int      @default(0)
+  createdAt        DateTime @default(now())
+}
+
+model VolunteerApplication {
+  id             String          @id @default(uuid())
+  name           String
+  age            Int?
+  mobile         String
+  email          String?
+  city           String?
+  availableDates String?
+  areaOfInterest String?
+  message        String?         @db.Text
+  status         VolunteerStatus @default(NEW)
+  createdAt      DateTime        @default(now())
+
+  @@index([status])
+}
+
+model ContactSubmission {
+  id        String        @id @default(uuid())
+  name      String
+  mobile    String
+  email     String?
+  subject   String?
+  category  String        @default("General")
+  message   String        @db.Text
+  status    ContactStatus @default(NEW)
+  ipAddress String?
+  createdAt DateTime      @default(now())
+
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Media library (§67)
+// ---------------------------------------------------------------------------
+
+model MediaAsset {
+  id         String   @id @default(uuid())
+  url        String // public URL for public assets
+  storageKey String?
+  kind       String   @default("image") // image | video | document | audio
+  title      String?
+  alt        String?
+  folder     String?  @default("general")
+  width      Int?
+  height     Int?
+  bytes      Int?
+  createdBy  String?
+  createdAt  DateTime @default(now())
+
+  @@index([folder])
+}
+
+// ---------------------------------------------------------------------------
+// SEO metadata (§39) — keyed by "type:identifier" (e.g. "page:about")
+// ---------------------------------------------------------------------------
+
+model SeoMetadata {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  title       String?
+  description String?
+  keywords    String?
+  ogImage     String?
+  canonical   String?
+  robots      String?  @default("index,follow")
+  updatedAt   DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Audit log (§33) — append-only; normal admins cannot modify.
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id         String    @id @default(uuid())
+  actorId    String?
+  actor      AdminUser? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actorEmail String?
+  action     String
+  entityType String?
+  entityId   String?
+  oldValues  Json?
+  newValues  Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Admin notifications (§52)
+// ---------------------------------------------------------------------------
+
+model AdminNotification {
+  id         String   @id @default(cuid())
+  type       String // donation | contact | volunteer
+  title      String
+  body       String?
+  entityType String?
+  entityId   String?
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([isRead, createdAt])
+}

@@ -1,0 +1,132 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================================================
+   Temple design tokens (spec §3). HSL channels so Tailwind can apply alpha.
+   ========================================================================= */
+:root {
+  --temple-red: 0 72% 42%;
+  --temple-maroon: 350 62% 22%;
+  --temple-sindoor: 6 78% 47%;
+  --temple-saffron: 30 96% 52%;
+  --temple-gold: 40 68% 50%;
+  --temple-gold-soft: 44 62% 72%;
+  --temple-cream: 40 46% 96%;
+  --temple-burgundy: 350 58% 14%;
+
+  --background: 40 46% 97%;
+  --foreground: 350 30% 16%;
+  --muted: 40 30% 92%;
+  --muted-foreground: 350 12% 40%;
+  --border: 40 24% 85%;
+  --card: 0 0% 100%;
+  --card-foreground: 350 30% 16%;
+
+  --font-gujarati: "Noto Sans Gujarati", sans-serif;
+  --font-display: "Cinzel", serif;
+  --font-serif: "Cormorant Garamond", serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-temple-gold ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer components {
+  /* Decorative gold divider (spec §3). */
+  .gold-divider {
+    height: 1px;
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--temple-gold) / 0.7),
+      transparent
+    );
+  }
+
+  /* Section heading eyebrow with lotus/sacred feel. */
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-sm font-medium uppercase tracking-[0.2em] text-temple-red;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-temple bg-temple-red px-6 py-3 font-medium text-temple-cream shadow-gold transition hover:bg-temple-sindoor hover:shadow-gold-glow focus-visible:ring-2;
+  }
+
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 rounded-temple bg-gradient-to-b from-temple-gold to-temple-saffron px-6 py-3 font-semibold text-temple-burgundy shadow-gold transition hover:brightness-105;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-temple border border-temple-gold/60 bg-transparent px-6 py-3 font-medium text-temple-maroon transition hover:bg-temple-gold/10;
+  }
+
+  .card-temple {
+    @apply rounded-temple border border-temple-gold/25 bg-card p-6 shadow-sm transition;
+  }
+
+  .container-temple {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .lang-gu {
+    font-family: var(--font-gujarati);
+  }
+
+  .input {
+    @apply w-full rounded-temple border border-border bg-card px-4 py-2.5 text-foreground outline-none transition focus:border-temple-gold focus:ring-2 focus:ring-temple-gold/40;
+  }
+
+  .admin-input {
+    @apply w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200;
+  }
+
+  .admin-label {
+    @apply mb-1 block text-sm font-medium text-slate-700;
+  }
+}
+
+/* Cinematic hero image transitions (spec §4). */
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 2.4s ease-in-out;
+}
+.hero-slide[data-active="true"] {
+  opacity: 1;
+}
+.hero-slide[data-active="true"] img {
+  animation: ken-burns 9s ease-out both;
+}
+
+/* Respect the user's motion preference (spec §35, §38). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .hero-slide[data-active="true"] img {
+    animation: none;
+  }
+}

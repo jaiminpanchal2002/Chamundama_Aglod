@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="Shree Chamunda Dham Aglod">
+  <defs>
+    <radialGradient id="g1" cx="50%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#8a1526"/>
+      <stop offset="55%" stop-color="#5e0f1e"/>
+      <stop offset="100%" stop-color="#360912"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f3d27a"/>
+      <stop offset="100%" stop-color="#c99a3a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#g1)"/>
+  <g opacity="0.25" stroke="url(#gold)" stroke-width="2" fill="none">
+    <g transform="translate(800,360)">
+      <circle r="240"/><circle r="200"/><circle r="150"/>
+    </g>
+  </g>
+  <!-- radiating rays -->
+  <g transform="translate(800,360)" opacity="0.18">
+    <g fill="url(#gold)">
+      <path d="M0,-360 L14,-40 L-14,-40 Z"/>
+      <path d="M0,-360 L14,-40 L-14,-40 Z" transform="rotate(45)"/>
+      <path d="M0,-360 L14,-40 L-14,-40 Z" transform="rotate(90)"/>
+      <path d="M0,-360 L14,-40 L-14,-40 Z" transform="rotate(135)"/>
+      <path d="M0,-360 L14,-40 L-14,-40 Z" transform="rotate(180)"/>
+      <path d="M0,-360 L14,-40 L-14,-40 Z" transform="rotate(225)"/>
+      <path d="M0,-360 L14,-40 L-14,-40 Z" transform="rotate(270)"/>
+      <path d="M0,-360 L14,-40 L-14,-40 Z" transform="rotate(315)"/>
+    </g>
+  </g>
+  <!-- trishul -->
+  <g transform="translate(800,300)" fill="url(#gold)" opacity="0.9">
+    <rect x="-4" y="0" width="8" height="300"/>
+    <path d="M-52,-60 q52,40 52,90 q0,-50 52,-90 q-10,70 -52,110 q-42,-40 -52,-110 Z"/>
+    <circle cx="0" cy="-70" r="10"/>
+  </g>
+  <text x="800" y="700" text-anchor="middle" font-family="'Noto Sans Gujarati',sans-serif" font-size="66" fill="#f6ead0" font-weight="700">શ્રી ચામુંડા ધામ આગલોડ</text>
+  <text x="800" y="760" text-anchor="middle" font-family="serif" font-size="30" fill="#e9c98f" letter-spacing="3">SHREE CHAMUNDA DHAM · AGLOD</text>
+</svg>
