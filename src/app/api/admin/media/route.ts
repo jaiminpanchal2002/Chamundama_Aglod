@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
-import { randomBytes } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { sniffMime } from "@/lib/storage";
+import { sniffMime, saveMedia } from "@/lib/storage";
 
 export const runtime = "nodejs";
 
@@ -15,9 +12,9 @@ const PUBLIC_TYPES: Record<string, string> = {
 };
 
 /**
- * Public media upload for admin CMS (hero, gallery, QR, campaigns). Stored under
- * /public/uploads for local/dev. NOTE: on serverless hosts (Vercel) the public
- * folder is not writable at runtime — configure Cloudinary/S3 for production.
+ * Public media upload for admin CMS (hero, gallery, QR, campaigns). Uses
+ * Cloudinary when STORAGE_DRIVER=cloudinary (persistent on Vercel), otherwise
+ * writes to /public/uploads for local development. See src/lib/storage.
  */
 export async function POST(request: Request) {
   const session = await auth();
@@ -44,11 +41,7 @@ export async function POST(request: Request) {
   }
 
   const folder = (form?.get("folder") as string) || "general";
-  const name = `${randomBytes(12).toString("hex")}.${PUBLIC_TYPES[mime]}`;
-  const dir = path.join(process.cwd(), "public", "uploads", folder);
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, name), buffer);
-  const url = `/uploads/${folder}/${name}`;
+  const url = await saveMedia(buffer, folder, PUBLIC_TYPES[mime]!);
 
   await prisma.mediaAsset
     .create({

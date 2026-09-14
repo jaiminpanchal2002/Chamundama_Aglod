@@ -70,7 +70,7 @@
   }
 
   .btn-gold {
-    @apply inline-flex items-center justify-center gap-2 rounded-temple bg-gradient-to-b from-temple-gold to-temple-saffron px-6 py-3 font-semibold text-temple-burgundy shadow-gold transition hover:brightness-105;
+    @apply inline-flex items-center justify-center gap-2 rounded-temple bg-gradient-to-b from-temple-gold to-temple-saffron px-6 py-3 font-semibold text-temple-burgundy shadow-gold transition hover:-translate-y-0.5 hover:shadow-gold-glow hover:brightness-105;
   }
 
   .btn-outline {
@@ -78,7 +78,10 @@
   }
 
   .card-temple {
-    @apply rounded-temple border border-temple-gold/25 bg-card p-6 shadow-sm transition;
+    @apply rounded-temple border border-temple-gold/25 bg-card p-6 shadow-sm transition-all duration-300 will-change-transform;
+  }
+  .card-temple:hover {
+    @apply -translate-y-1 border-temple-gold/50 shadow-gold;
   }
 
   .container-temple {
@@ -114,6 +117,40 @@
 }
 .hero-slide[data-active="true"] img {
   animation: ken-burns 9s ease-out both;
+}
+
+/* Ambient hero particles (spec §4). */
+@keyframes spark-rise {
+  0% {
+    transform: translateY(0) translateX(0) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-92vh) translateX(var(--drift, 0)) scale(1.1);
+    opacity: 0;
+  }
+}
+@keyframes petal-fall {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(102vh) translateX(var(--drift, 0)) rotate(320deg);
+    opacity: 0;
+  }
 }
 
 /* Respect the user's motion preference (spec §35, §38). */

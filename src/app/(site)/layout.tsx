@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getLocale, translate } from "@/lib/i18n";
 import { pick, type Locale } from "@/lib/i18n/config";
 import { getMaintenance, getWhatsapp, getAudio } from "@/lib/settings";
+import { ScrollProgress } from "@/components/ui/ScrollProgress";
 import { Navbar, type NavItem } from "@/components/site/Navbar";
 import { Footer, type FooterSocial } from "@/components/site/Footer";
 import { WhatsAppButton } from "@/components/site/WhatsAppButton";
@@ -71,6 +72,7 @@ export default async function SiteLayout({
 
   return (
     <>
+      <ScrollProgress />
       <Navbar
         locale={locale}
         items={nav}

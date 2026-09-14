@@ -2,6 +2,11 @@ import "server-only";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { mkdir, readFile, writeFile, unlink, access } from "node:fs/promises";
 import path from "node:path";
+import {
+  cloudinaryConfigured,
+  cloudinaryDriver,
+  uploadPublicMedia,
+} from "./cloudinary";
 
 /**
  * Private storage abstraction (spec §17). Donation payment proofs contain
@@ -67,17 +72,36 @@ const localDriver: StorageDriver = {
   },
 };
 
-// Only the local driver is wired here; cloudinary/s3 can be added behind the
-// same interface. STORAGE_DRIVER selects the active one.
+// STORAGE_DRIVER selects the active driver. Cloudinary is used in production
+// (Vercel filesystem is not persistent); local is the zero-config default.
 function getDriver(): StorageDriver {
-  switch (process.env.STORAGE_DRIVER) {
-    case "local":
-    default:
-      return localDriver;
+  if (process.env.STORAGE_DRIVER === "cloudinary" && cloudinaryConfigured()) {
+    return cloudinaryDriver;
   }
+  return localDriver;
 }
 
 export const storage = getDriver();
+
+/**
+ * Save a PUBLIC CMS image (hero, gallery, QR, campaigns) and return its URL.
+ * Uses Cloudinary when configured (persistent on serverless), otherwise writes
+ * to /public/uploads for local development.
+ */
+export async function saveMedia(
+  buffer: Buffer,
+  folder: string,
+  ext: string,
+): Promise<string> {
+  if (process.env.STORAGE_DRIVER === "cloudinary" && cloudinaryConfigured()) {
+    return uploadPublicMedia(buffer, folder);
+  }
+  const dir = path.join(process.cwd(), "public", "uploads", folder);
+  await mkdir(dir, { recursive: true });
+  const name = `${randomBytes(12).toString("hex")}.${ext.replace(/[^a-z0-9]/gi, "")}`;
+  await writeFile(path.join(dir, name), buffer);
+  return `/uploads/${folder}/${name}`;
+}
 
 // --------------------------------------------------------------------------
 // Signed, expiring access tokens for admin downloads

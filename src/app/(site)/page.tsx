@@ -7,6 +7,7 @@ import { pick } from "@/lib/i18n/config";
 import { formatINR, youtubeId } from "@/lib/utils";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
+import { Parallax } from "@/components/ui/Parallax";
 import { Hero, type HeroSlideData } from "@/components/site/Hero";
 
 export const dynamic = "force-dynamic";
@@ -251,14 +252,19 @@ export default async function HomePage() {
       <Section tone="white" id="about">
         <div className="grid items-center gap-10 lg:grid-cols-2">
           <Reveal>
-            <div className="relative aspect-[4/3] overflow-hidden rounded-temple border border-temple-gold/30 shadow-gold">
-              <Image
-                src="/hero/hero-2.svg"
-                alt="Shree Chamunda Dham Aglod"
-                fill
-                className="object-cover"
-              />
-            </div>
+            <Parallax
+              amount={30}
+              className="relative aspect-[4/3] overflow-hidden rounded-temple border border-temple-gold/30 shadow-gold"
+            >
+              <div className="absolute inset-[-8%]">
+                <Image
+                  src={heroSlides[0]?.desktopImage || "/hero/hero-2.svg"}
+                  alt="Shree Chamunda Dham Aglod"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            </Parallax>
           </Reveal>
           <Reveal delay={0.1}>
             <span className="eyebrow">✦ {translate(locale, "nav.temple")}</span>
